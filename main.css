@@ -1,0 +1,15 @@
+body {
+    width: 500px;
+    margin: auto;
+}
+
+canvas {
+    border: none!important;
+}
+
+.statistics {
+    background-color: #eef1f2;
+    text-align: center;
+    padding: 10px 0;
+    font-style: "Arial", sans-serif;
+}
