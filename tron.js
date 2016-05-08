@@ -7,6 +7,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     game.clearMapBeforeNextStep = false;
 
+    game.connection = {};
+
+    //utility function for neat switch case constructs where case is a function call without args
+    function switchIt(key, map){
+        map[key]();
+    }
+
+    function wrap(func, value, context){
+        if(typeof(context) !== undefined){
+            return function(){
+                func.call(context, value);
+            };
+        }
+        else {
+            return function(){
+                func(value);
+            };
+        }
+    }
+
     game.nextRoundCheck = function() {
         //clearScreen
         if(game.clearMapBeforeNextStep) {
@@ -17,15 +37,26 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     function handleKeyEvent(event) {
-        if(event.which == 68)        game.player1.setDirection(1, 0); //d
-        else if(event.which == 65)   game.player1.setDirection(-1, 0); //a
-        else if(event.which == 87)   game.player1.setDirection(0, -1); //w
-        else if(event.which == 83)   game.player1.setDirection(0, 1); //s
+        
+        /*switchIt(''+event.which, {
+            '68': game.player1.right, //d
+            '65': game.player1.left, //a
+            '87': game.player1.up, //w
+            '83': game.player1.down, //s
+        });*/
 
-        if(event.which == 54)        game.player2.setDirection(1, 0); //6
-        else if(event.which == 52)   game.player2.setDirection(-1, 0); //4
-        else if(event.which == 56)   game.player2.setDirection(0, -1); //8
-        else if(event.which == 53)   game.player2.setDirection(0, 1); //5
+        switchIt(''+event.which, {
+            '68': wrap(game.connection.send, 'right', game.connection), //d
+            '65': wrap(game.connection.send, 'left', game.connection), //a
+            '87': wrap(game.connection.send, 'up', game.connection), //w
+            '83': wrap(game.connection.send, 'down', game.connection), //s
+
+            '54': game.player2.right, //6
+            '52': game.player2.left, //4
+            '56': game.player2.up, //8
+            '53': game.player2.down, //5
+        });
+
         console.log("keydown: "+event.which);
     }
     document.addEventListener("keydown", handleKeyEvent);
@@ -57,35 +88,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function Player(name, initialPos, direction, color){
-        this.color = color;
-        this.name = name;
-        this.initialPos = {x: initialPos.x, y: initialPos.y};
-        this.pos = initialPos; //field coords
-        this.size = field.size; //pixel coords
-        this.direction = direction;
-        this.score = 0;
+        var player = this;
+        player.color = color;
+        player.name = name;
+        player.initialPos = {x: initialPos.x, y: initialPos.y};
+        player.pos = initialPos; //field coords
+        player.size = field.size; //pixel coords
+        player.direction = direction;
+        player.score = 0;
 
-        this.step = function(){
-            playerStep(this);
+        player.step = function(){
+            playerStep(player);
         };
 
-        this.scores = function(){
-            this.score += 1;
-            document.getElementById(this.name+"Score").innerHTML = this.score;
+        player.scores = function(){
+            player.score += 1;
+            document.getElementById(player.name+"Score").innerHTML = player.score;
         };
 
-        this.setDirection = function(x, y) {
-            this.direction = {x: x, y: y};
+        player.setDirection = function(x, y) {
+            player.direction = {x: x, y: y};
         };
+
+        player.up    = function(){player.setDirection(0, -1);};
+        player.down  = function(){player.setDirection(0, 1);};
+        player.left  = function(){player.setDirection(-1, 0);};
+        player.right = function(){player.setDirection(1, 0);};
 
         //returns pixel coords of the rect that represents the player
-        this.renderedRect = function(){
-            return {p1: {x: this.pos.x*field.size.x, y: this.pos.y*field.size.y},
-                    p2: {x: this.size.x, y: this.size.y}};
+        player.renderedRect = function(){
+            return {p1: {x: player.pos.x*field.size.x, y: player.pos.y*field.size.y},
+                    p2: {x: player.size.x, y: player.size.y}};
         };
 
-        this.restart = function() {
-            this.pos = {x: this.initialPos.x, y: this.initialPos.y};
+        player.restart = function() {
+            player.pos = {x: player.initialPos.x, y: player.initialPos.y};
         };
     }
 
@@ -136,11 +173,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initGame() {
-        //init timer
 
         //map
         map.init();
+
+        //init timer
         timer = setInterval(step, stepInterval);
+
+        //init server websocket connection
+        game.connection = new WebSocket('ws://localhost:8001');
+        game.connection.onmessage = function(event){
+            var msg = event.data;
+
+            switchIt(msg, {
+                'up': game.player1.up,
+                'down': game.player1.down,
+                'left': game.player1.left,
+                'right': game.player1.right
+            });
+        }
     }
 
     function step() {
