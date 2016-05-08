@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
         <link rel="stylesheet" href="main.css">
         <script type="text/javascript" src="tron.js"></script>
+        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
     </head>
     <body>
         <div class="statistics">
@@ -11,5 +13,12 @@
         <canvas id="myCanvas" width="500" height="500" style="border:1px solid #000000;">
         Your browser does not support the HTML5 canvas tag.
         </canvas>
+        <div class="control">
+            <input id="input-game-id" type="text" class="input-game-id" placeholder="enter game id">
+            <a href="javascript:;" id="btn-join" class="btn btn--prime">verbinden</a>
+            <a href="javascript:;" id="btn-create" class="btn btn--prime">erstellen</a>
+            <a href="javascript:;" id="btn-pause" class="btn btn--prime">pause</a>
+        </div>
+        <div class="status-bar control">Status: <span id="status"></span></div>
     </body>
 </html>

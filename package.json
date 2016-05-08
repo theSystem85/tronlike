@@ -1,0 +1,15 @@
+{
+  "name": "pb-tron",
+  "version": "1.0.0",
+  "description": "dodge game for 2 players",
+  "main": "server.js",
+  "scripts": {
+    "test": "test",
+    "start": "node server.js"
+  },
+  "author": "Patrick Beyer",
+  "license": "MIT",
+  "dependencies": {
+    "nodejs-websocket": "^1.5.0"
+  }
+}

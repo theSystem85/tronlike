@@ -1,15 +1,68 @@
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 body {
     width: 500px;
     margin: auto;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
 }
 
 canvas {
     border: none!important;
+    background-color: #eef1f2;
+}
+
+*[disabled], *[disabled]:hover, *[disabled]:active {
+    cursor: default;
+    opacity: 0.5;
+}
+
+input[type="text"] {
+    padding: 1em;
+    border-radius: 5px;
+    border: 1px solid rgb(102, 204, 255);
 }
 
 .statistics {
-    background-color: #eef1f2;
+    background-color: rgb(102, 204, 255);
     text-align: center;
     padding: 10px 0;
-    font-style: "Arial", sans-serif;
+}
+
+.control {
+    margin-top: 10px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.5em 1em;
+    border: none;
+    margin-left: 10px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.btn:hover {
+    text-decoration: none;
+}
+
+.btn--prime {
+    background-color: rgb(102, 204, 255);
+    color: rgb(255, 255, 255);
+}
+
+.btn--prime:hover {
+    background-color: rgb(77, 195, 255);
+    color: rgb(255, 255, 255);
+}
+
+.btn--prime:active {
+    background-color: rgb(51, 187, 255);
+    color: rgb(255, 255, 255);
 }

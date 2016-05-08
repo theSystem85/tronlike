@@ -9,6 +9,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     game.connection = {};
 
+    var field = {
+        size: {x: 10, y: 10}
+    }
+
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    var timer;
+    var paused = true;
+
     //utility function for neat switch case constructs where case is a function call without args
     function switchIt(key, map){
         map[key]();
@@ -27,6 +36,46 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    game.join = function(){
+        var id = document.getElementById('input-game-id').value;
+        var request = JSON.stringify({request: 'join', gameId: id});
+        game.connection.send(request);
+    }
+
+    game.create = function(){
+        var id = document.getElementById('input-game-id').value;
+        var request = JSON.stringify({request: 'create', gameId: id});
+        game.connection.send(request);
+    }
+
+    game.pause = function(){
+        paused = true;
+        clearInterval(timer);
+        document.getElementById('status').innerHTML = 'game paused!';
+        document.getElementById('btn-pause').innerHTML = 'resume';
+    }
+
+    game.resume = function(){
+        paused = false;
+        timer = setInterval(step, stepInterval);
+        document.getElementById('status').innerHTML = 'game resumed!';
+        document.getElementById('btn-pause').innerHTML = 'pause';
+    }
+
+    //send msg to server to pause the game for both players
+    game.requestPause = function(){
+        game.connection.send(JSON.stringify({request: 'pause'}));
+    }
+
+    //send msg to server to resume the game for both players
+    game.requestResume = function(){
+        game.connection.send(JSON.stringify({request: 'resume'}));
+    }
+
+    game.pauseOrResume = function(){
+        paused ? game.requestResume() : game.requestPause();
+    }
+
     game.nextRoundCheck = function() {
         //clearScreen
         if(game.clearMapBeforeNextStep) {
@@ -36,38 +85,53 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    function getMoveRequest(move){
+        return JSON.stringify({request: 'move', move: move});
+    }
+
+    function upPressed(){
+        game.connection.send(getMoveRequest('up'));
+        game[game.player].up();
+    }
+
+    function downPressed(){
+        game.connection.send(getMoveRequest('down'));
+        game[game.player].down();
+    }
+
+    function rightPressed(){
+        game.connection.send(getMoveRequest('right'));
+        game[game.player].right();
+    }
+
+    function leftPressed(){
+        game.connection.send(getMoveRequest('left'));
+        game[game.player].left();
+    }
+
     function handleKeyEvent(event) {
-        
-        /*switchIt(''+event.which, {
-            '68': game.player1.right, //d
-            '65': game.player1.left, //a
-            '87': game.player1.up, //w
-            '83': game.player1.down, //s
-        });*/
 
         switchIt(''+event.which, {
-            '68': wrap(game.connection.send, 'right', game.connection), //d
-            '65': wrap(game.connection.send, 'left', game.connection), //a
-            '87': wrap(game.connection.send, 'up', game.connection), //w
-            '83': wrap(game.connection.send, 'down', game.connection), //s
+            '68': rightPressed, //d
+            '65': leftPressed, //a
+            '87': upPressed, //w
+            '83': downPressed, //s
 
-            '54': game.player2.right, //6
+            /*'54': game.player2.right, //6
             '52': game.player2.left, //4
             '56': game.player2.up, //8
-            '53': game.player2.down, //5
+            '53': game.player2.down, //5*/
         });
-
-        console.log("keydown: "+event.which);
     }
+
+    document.getElementById('btn-join').addEventListener("click", game.join);
+    document.getElementById('btn-create').addEventListener("click", game.create);
+    document.getElementById('btn-pause').addEventListener("click", game.pauseOrResume);
+    document.getElementById('btn-pause').setAttribute('disabled', 'disabled');
     document.addEventListener("keydown", handleKeyEvent);
-
-    var field = {
-        size: {x: 10, y: 10}
-    }
-
-    var c = document.getElementById("myCanvas");
-    var ctx = c.getContext("2d");
-    var timer;
+    document.getElementById('input-game-id').addEventListener('keydown', function(event){
+        event.stopPropagation();
+    });
 
     function Map(size){
         //size in fields
@@ -177,20 +241,39 @@ document.addEventListener('DOMContentLoaded', function() {
         //map
         map.init();
 
-        //init timer
-        timer = setInterval(step, stepInterval);
-
         //init server websocket connection
         game.connection = new WebSocket('ws://localhost:8001');
         game.connection.onmessage = function(event){
-            var msg = event.data;
+            var data = JSON.parse(event.data);
 
-            switchIt(msg, {
-                'up': game.player1.up,
-                'down': game.player1.down,
-                'left': game.player1.left,
-                'right': game.player1.right
-            });
+            console.log(data);
+
+            if(data.response == 'move'){
+                switchIt(data.move, {
+                    'up': game[game.otherPlayer].up,
+                    'down': game[game.otherPlayer].down,
+                    'left': game[game.otherPlayer].left,
+                    'right': game[game.otherPlayer].right
+                });
+            }
+            else if(data.response == 'start'){
+                //init timer
+                paused = false;
+                game.otherPlayer = data.otherPlayer;
+                game.player = data.player;
+                timer = setInterval(step, stepInterval);
+                document.getElementById('status').innerHTML = 'game started!';
+                document.getElementById('btn-pause').removeAttribute('disabled');
+            }
+            else if(data.response == 'pause'){
+                game.pause();
+            }
+            else if(data.response == 'resume'){
+                game.resume();
+            }
+            else if(data.response == 'status'){
+                document.getElementById('status').innerHTML = data.status;
+            }
         }
     }
 
