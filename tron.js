@@ -1,4 +1,4 @@
-//deployment test
+//deployment test2
 document.addEventListener('DOMContentLoaded', function() {
 
     var stepInterval = 300; //in ms
