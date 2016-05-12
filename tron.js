@@ -1,6 +1,8 @@
 //deployment test3
 document.addEventListener('DOMContentLoaded', function() {
 
+    var SERVER_WS_URL = 'ws://localhost:8001';//'ws://patrick-beyer-software.de:8001';
+
     var stepInterval = 300; //in ms
 
     var game = {player1: {}, player2: {}};
@@ -242,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
         map.init();
 
         //init server websocket connection
-        game.connection = new WebSocket('ws://patrick-beyer-software.de:8001');
+        game.connection = new WebSocket(SERVER_WS_URL);
         game.connection.onmessage = function(event){
             var data = JSON.parse(event.data);
 
